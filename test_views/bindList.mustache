@@ -1,0 +1,7 @@
+<ul {{bindList sortBy="name" namespace="hello"}}>
+{{#bindItem}}
+	<li {{bindAttr data-name="name"}}>
+		Hello <span class="name" {{bindText "name"}}></span>!
+		Count: <span class="count" {{bindText "count"}}></span>
+{{/bindItem}}
+</ul>
