@@ -235,7 +235,7 @@ steal.plugins('mustache','common','jquery/lang','jquery/model').then(function($)
 	Handlebars.registerHelper('hookupModel',function() {
 		var model = this;
 		return addHookup(function(el) {
-			model.hookup(el);
+			model.hookup(el[0]);
 		});
 	});
 

@@ -132,7 +132,10 @@ steal.plugins("funcunit/qunit", "live_handlebars",'jquery/model','jquery/model/l
 	});
 
 	test("hookupModel", function(){
-		// TODO
+		var model = new ($.Model)({foo:'foo'});
+		render('hookupModel',model,function(el) {
+			equals( el.find('div').model(), model, 'model hooked up' );
+		});
 	});
 
 	test("kitchenSink", function(){
