@@ -125,6 +125,12 @@ steal.plugins("funcunit/qunit", "live_handlebars",'jquery/model','jquery/model/l
 		});
 	});
 
+	test("derrived attributes", function(){
+	});
+
+	test("method calls", function(){
+	});
+
 	test("hookupModel", function(){
 		// TODO
 	});

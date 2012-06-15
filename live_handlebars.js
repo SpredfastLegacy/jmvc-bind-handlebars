@@ -1,4 +1,4 @@
-steal.plugins('mustache','common','jquery/lang').then(function($){
+steal.plugins('mustache','common','jquery/lang','jquery/model').then(function($){
 
 	var TMPL = /\{([^\s\{\}]+)\}/g,
 		PREFIX = 'data-live-hookup',
@@ -20,17 +20,20 @@ steal.plugins('mustache','common','jquery/lang').then(function($){
 
 	function bindings(obj,el,createBinder) {
 		var model = this;
-		_.invoke(_.map(obj,function(value,key,obj) {
+		_.map(obj,function(value,key,obj) {
 			var binding = createBinder.call(this,value,key,obj),
-				events = binding[0],
+				observed = binding[0],
 				binder = binding[1];
-			// TODO if binding multiple events, queue the update
-			model.bind(events,binder);
+			_.each(observed,function(o) {
+				o.obj.bind(o.attr,binder);
+			});
 			el.bind('destroyed',function() {
-				model.unbind(events,binder);
+				_.each(observed,function(o) {
+					o.obj.unbind(o.attr,binder);
+				});
 			});
 			return binder;
-		}),'call',this);
+		});
 	}
 
 	// takes a simple string that may have substitutions and figures out what
@@ -41,10 +44,44 @@ steal.plugins('mustache','common','jquery/lang').then(function($){
 			bindTo.replace(TMPL,function(match,attr) {
 				attrs.push(attr);
 			});
-			return attrs.join(' ');
+			return {attrs:attrs};
 		} else {
 			return bindTo;
 		}
+	}
+
+	function getValue(obj,attr) {
+		var attrs = parseEvents(attr);
+		if(attrs.attrs) {
+			var results = {};
+			_.each(attrs.attrs,function(attr) {
+				results[attr] = getValue(obj,attr);
+			});
+			return results;
+		} else if(_.isFunction(obj[attrs])) {
+			return obj[attrs]();
+		} else {
+			return obj.attr(attrs);
+		}
+	}
+
+	// record attribute accesses while we do the initial load
+	var realAttr = $.Model.prototype.attr;
+	$.Model.prototype.attr = function(attr,val) {
+		if($.Model.__reading && typeof val === 'undefined') {
+			$.Model.__reading(this,attr);
+		}
+		return realAttr.apply(this,arguments);
+	};
+
+	function trapObserved(update) {
+		var observed = [], old = $.Model.__reading;
+		$.Model.__reading = function(obj,attr) {
+			observed.push({obj:obj,attr:attr});
+		};
+		update();
+		$.Model.__reading = old;
+		return observed;
 	}
 
 	// add a binding based on doing substitions on the value for each name="value" pair
@@ -61,12 +98,13 @@ steal.plugins('mustache','common','jquery/lang').then(function($){
 				var not = !tmpl && bindTo[0] === '!';
 				bindTo = not ? bindTo.substring(1) : bindTo;
 				function simpleUpdate() {
-					update.call(this,el,
-						tmpl ? $.String.sub(bindTo,this) :
-							not ? !this.attr(bindTo) : this.attr(bindTo),
+					var value = getValue(ctx,bindTo);
+					update.call(ctx,el,
+						tmpl ? $.String.sub(bindTo,value) :
+							not ? !value : value,
 						key);
 				}
-				return [parseEvents(bindTo),simpleUpdate];
+				return [trapObserved(simpleUpdate),simpleUpdate];
 			});
 		});
 	}
