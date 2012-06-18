@@ -137,13 +137,13 @@ steal.plugins('mustache','common','jquery/lang','jquery/model').then(function($)
 
 	Handlebars.registerHelper('bindClass',function(ctx,options) {
 		return bindMany.call(this,ctx,options,function(el,condition,className) {
-			el.toggleClass(className,!!condition);
+			el.toggleClass(""+className,!!condition);
 		});
 	});
 
 	Handlebars.registerHelper('bindHtml',function(attr,options) {
 		return bindOne.call(this,attr,options,function(el,html) {
-			el.html(html);
+			el.html(""+html);
 		});
 	});
 
@@ -220,13 +220,13 @@ steal.plugins('mustache','common','jquery/lang','jquery/model').then(function($)
 
 	Handlebars.registerHelper('bindText',function(attr,options) {
 		return bindOne.call(this,attr,options,function(el,text) {
-			el.text(text);
+			el.text(""+text);
 		});
 	});
 
 	Handlebars.registerHelper('bindVal',function(attr,options) {
 		return bindOne.call(this,attr,options,function(el,val) {
-			el.val(val);
+			el.val(""+val);
 		});
 	});
 
