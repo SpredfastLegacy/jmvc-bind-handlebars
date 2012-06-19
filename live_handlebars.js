@@ -1,4 +1,29 @@
-steal.plugins('mustache','common','jquery/lang','jquery/model').then(function($){
+steal.plugins('mustache','jquery/lang','jquery/model','jquery').then(function($){
+
+	var _ = {
+		map: function(obj,iterator,context) {
+			return $.map(obj,function(value,key) {
+				return iterator.call(context,value,key);
+			});
+		},
+		keys: function(obj) {
+			return _.map(obj,function(v,key) {
+				return key;
+			});
+		},
+		isFunction: function(obj) {
+			return Object.prototype.toString.call(obj) == '[object Function]';
+		},
+		find: function(obj,iterator) {
+			for(var i = 0, l = obj.length; i < l; i++) {
+				if(iterator(obj[i])) {
+					return obj[i];
+				}
+			}
+		}
+	};
+
+	_.each = _.map;
 
 	var TMPL = /\{([^\s\{\}]+)\}/g,
 		PREFIX = 'data-live-hookup',

@@ -69,7 +69,7 @@ steal.plugins("funcunit/qunit", "live_handlebars",'jquery/model','jquery/model/l
 			el = el.find('ul');
 
 			function names(message,values) {
-				equals(_.map(el.find('.name'),function(el) { return $(el).text(); }).join(' '),
+				equals($.map(el.find('.name'),function(el) { return $(el).text(); }).join(' '),
 					values, message);
 			}
 
