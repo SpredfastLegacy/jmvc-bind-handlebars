@@ -1,3 +1,6 @@
+/**
+ * (c) 2012 Spredfast, Inc. BSD Licensed; see LICENSE.txt
+ */
 steal.plugins('mustache','jquery/lang','jquery/model','jquery').then(function($){
 
 	var _ = {
