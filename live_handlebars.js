@@ -118,8 +118,12 @@ steal("jquery","jquery/lang/string","jquery/model","mustache",function() {
 			options = ctx;
 			ctx = this;
 		}
-		return addHookup(function(el) {
-			bindings.call(ctx,options.hash,el,function(bindTo,key) {
+		return addHookup(bindingsSetup(ctx,options.hash,update));
+	}
+
+	function bindingsSetup(ctx,options,update) {
+		return function(el) {
+			bindings.call(ctx,options,el,function(bindTo,key) {
 				var length, not, tmpl;
 				if( _.isString(bindTo) ) {
 					tmpl = bindTo.match(TMPL);
@@ -152,7 +156,7 @@ steal("jquery","jquery/lang/string","jquery/model","mustache",function() {
 				}
 				return [bound,simpleUpdate];
 			});
-		});
+		};
 	}
 
 	// bind to a single attribute change
@@ -191,6 +195,31 @@ steal("jquery","jquery/lang/string","jquery/model","mustache",function() {
 		return bindOne.call(this,attr,options,function(el,html) {
 			el.html(""+html);
 		});
+	});
+
+	Handlebars.registerHelper('bindIf',function(attr,options) {
+		var ctx = options.hash.context || this,
+			templateContext = this;
+		return '<span ' + addHookup(function(el) {
+			var parent = $(el).parent(),
+				bind = {_changed:attr},
+				content = $(el);
+			if(!parent.length) {
+				throw new Error('Cannot use bindIf without a wrapper element.');
+			}
+			bindingsSetup(ctx,bind,function(parent,condition) {
+				var newContent = $('<div/>').
+					html( (condition ? options.fn : options.inverse)(templateContext) ).
+					children();
+
+				if(!newContent.length) {
+					newContent = $('<span></span>');
+				}
+
+				content.replaceWith(newContent);
+				content = newContent;
+			})(parent);
+		}) +'></span>';
 	});
 
 	Handlebars.registerHelper('bindList',function(ctx,options) {

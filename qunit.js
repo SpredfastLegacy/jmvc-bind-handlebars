@@ -56,6 +56,17 @@ steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jqu
 			equals(el.html(),'Hi Bob.');
 		});
 	});
+	test("bindIf", function(){
+		var model = new ($.Model)({foo:{boolean:false,bar:123}});
+		render('bindIf',model,function(parent) {
+			var el = parent.find('p');
+			equals(el.text(),'Not foo','renders else');
+
+			model.attr('foo.boolean',true);
+
+			equals(parent.find('p').text(),'Foo: 123');
+		});
+	});
 	test("bindList", function(){
 		expect(5);
 		var list = TestModel.models([{
