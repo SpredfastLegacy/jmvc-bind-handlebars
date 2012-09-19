@@ -299,14 +299,6 @@ steal("jquery","jquery/lang/string","jquery/model","mustache",function() {
 		});
 	});
 
-	Handlebars.registerHelper('bindTruncatedText',function(attr,options) {
-		var len = options.hash.length,
-			ellipsis = options.hash.ellipsis;
-		return bindOne.call(this,attr,options,function(el,text) {
-			el.text(""+Spredfast.truncate(text,len,ellipsis));
-		});
-	});
-
 	Handlebars.registerHelper('bindVal',function(attr,options) {
 		var def = options && options.hash && options.hash['default'];
 		return bindOne.call(this,attr,options,function(el,val) {
