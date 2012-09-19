@@ -1,7 +1,9 @@
 /**
  * (c) 2012 Spredfast, Inc. BSD Licensed; see LICENSE.txt
  */
-steal.plugins('mustache','jquery/lang','jquery/model','jquery').then(function($){
+steal("jquery","jquery/lang/string","jquery/model","mustache",function() {
+
+	var toString = Object.prototype.toString;
 
 	var _ = {
 		map: function(obj,iterator,context) {
@@ -15,7 +17,10 @@ steal.plugins('mustache','jquery/lang','jquery/model','jquery').then(function($)
 			});
 		},
 		isFunction: function(obj) {
-			return Object.prototype.toString.call(obj) == '[object Function]';
+			return toString.call(obj) == '[object Function]';
+		},
+		isString: function(obj) {
+			return toString.call(obj) == '[object String]';
 		},
 		find: function(obj,iterator) {
 			for(var i = 0, l = obj.length; i < l; i++) {
@@ -41,8 +46,8 @@ steal.plugins('mustache','jquery/lang','jquery/model','jquery').then(function($)
 	// $.View.hookup will only work for the first hookup on an element, but we may have multiple
 	function addHookup(fn) {
 		hookups[++id] = fn;
-		return new Handlebars.SafeString('data-view-id="' +
-			$.View.hookup(runHookups) +
+		return new Handlebars.SafeString(
+			$.View.hook(runHookups) +
 		'" '+PREFIX+id);
 	}
 
@@ -68,7 +73,7 @@ steal.plugins('mustache','jquery/lang','jquery/model','jquery').then(function($)
 	// attributes it depends on
 	function parseEvents(bindTo) {
 		var attrs = [];
-		if(bindTo.match(TMPL)) {
+		if(_.isString(bindTo) && bindTo.match(TMPL)) {
 			bindTo.replace(TMPL,function(match,attr) {
 				attrs.push(attr);
 			});
@@ -88,27 +93,20 @@ steal.plugins('mustache','jquery/lang','jquery/model','jquery').then(function($)
 			return results;
 		} else if(_.isFunction(obj[attrs])) {
 			return obj[attrs]();
+		} else if(_.isFunction(attr)) {
+			return attr.call(obj);
 		} else {
 			return obj.attr(attrs);
 		}
 	}
 
-	// record attribute accesses while we do the initial load
-	var realAttr = $.Model.prototype.attr;
-	$.Model.prototype.attr = function(attr,val) {
-		if($.Model.__reading && typeof val === 'undefined') {
-			$.Model.__reading(this,attr);
-		}
-		return realAttr.apply(this,arguments);
-	};
-
 	function trapObserved(update) {
-		var observed = [], old = $.Model.__reading;
-		$.Model.__reading = function(obj,attr) {
+		var observed = [], old = can.Observe.__reading;
+		can.Observe.__reading = function(obj,attr) {
 			observed.push({obj:obj,attr:attr});
 		};
 		update();
-		$.Model.__reading = old;
+		can.Observe.__reading = old;
 		return observed;
 	}
 
@@ -122,24 +120,44 @@ steal.plugins('mustache','jquery/lang','jquery/model','jquery').then(function($)
 		}
 		return addHookup(function(el) {
 			bindings.call(ctx,options.hash,el,function(bindTo,key) {
-				var tmpl = bindTo.match(TMPL);
-				var not = !tmpl && bindTo[0] === '!';
-				bindTo = not ? bindTo.substring(1) : bindTo;
+				var length, not, tmpl;
+				if( _.isString(bindTo) ) {
+					tmpl = bindTo.match(TMPL);
+					not = !tmpl && bindTo.charAt(0) === '!';
+					bindTo = not ? bindTo.substring(1) : bindTo;
+					length = !tmpl && bindTo.charAt(0) === '#';
+					bindTo = length ? bindTo.substring(1) : bindTo;
+				}
 				function simpleUpdate() {
 					var value = getValue(ctx,bindTo);
+					if(length) {
+						value = value && value.length;
+					}
 					update.call(ctx,el,
 						tmpl ? $.String.sub(bindTo,value) :
 							not ? !value : value,
 						key);
 				}
-				return [trapObserved(simpleUpdate),simpleUpdate];
+				var bound = trapObserved(simpleUpdate);
+				// if it's the length, add a binding to update on add & remove
+				if(length) {
+					var list = getValue(ctx,bindTo);
+					if(!list) {
+						throw new Error(bindTo+' is not defined.');
+					}
+					bound.push({
+						obj: list,
+						attr: 'add remove'
+					});
+				}
+				return [bound,simpleUpdate];
 			});
 		});
 	}
 
 	// bind to a single attribute change
 	function bindOne(attr,options,update) {
-		var ctx = options.context || this;
+		var ctx = options.hash.context || this;
 		return bindMany.call(this,ctx,{hash:{attr:attr}},update);
 	}
 
@@ -194,7 +212,7 @@ steal.plugins('mustache','jquery/lang','jquery/model','jquery').then(function($)
 
 			var value = sortBy(model);
 			var before = _.find(ctx.elements(el),function(item) {
-				return sortBy($(item).model(model.Class)) > value;
+				return sortBy($(item).model(model.constructor)) > value;
 			});
 			return before && $(before);
 		}
@@ -252,16 +270,39 @@ steal.plugins('mustache','jquery/lang','jquery/model','jquery').then(function($)
 		});
 	});
 
+	Handlebars.registerHelper('bindTruncatedText',function(attr,options) {
+		var len = options.hash.length,
+			ellipsis = options.hash.ellipsis;
+		return bindOne.call(this,attr,options,function(el,text) {
+			el.text(""+Spredfast.truncate(text,len,ellipsis));
+		});
+	});
+
 	Handlebars.registerHelper('bindVal',function(attr,options) {
+		var def = options && options.hash && options.hash['default'];
 		return bindOne.call(this,attr,options,function(el,val) {
-			el.val(""+val);
+			var old = el.val();
+			if(old !== val) {
+				// the default value comes into play if val is undefined
+				// or null (hence ==) because 0 or the empty string is OK
+				/*jshint eqnull:true */
+				el.val(""+((val == null && def != null) ? def : val));
+			}
+		});
+	});
+
+	Handlebars.registerHelper('bindSelect',function(attr,options) {
+		return bindOne.call(this,attr,options,function(el,val) {
+			el.find('option').filter(function() {
+				return String($(this).val()) === String(val);
+			}).prop('selected',true);
 		});
 	});
 
 
 	// HACK have to overwrite hookupModel because it doesn't support multiple hookups
-	Handlebars.registerHelper('hookupModel',function() {
-		var model = this;
+	Handlebars.registerHelper('hookupModel',function(ctx,options) {
+		var model = ctx && ctx.bind && ctx || this;
 		return addHookup(function(el) {
 			model.hookup(el[0]);
 		});

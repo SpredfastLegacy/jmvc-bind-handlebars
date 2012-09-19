@@ -1,6 +1,9 @@
-steal.plugins("funcunit/qunit", "live_handlebars",'jquery/model','jquery/model/list').then(function() {
+steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jquery/lang/observe",
+	function() {
 
 	module("live_handlebars");
+
+	var TestModel = can.Model({});
 
 	function render(tmpl,data,fn) {
 		var el = $('<div />').appendTo($('body')).
@@ -11,35 +14,42 @@ steal.plugins("funcunit/qunit", "live_handlebars",'jquery/model','jquery/model/l
 	}
 
 	test("bindAttr", function(){
-		var model = new ($.Model)({foo:123,bar:'abc'});
+		var model = new $.Observe({foo:123,bar:'abc'});
 		render('bindAttr',model,function(el) {
 			equals(el.find('button').attr('name'),'123','can bind by name');
 			equals(el.find('button').attr('title'),'foo-abc','can bind and interpolate');
 
-			model.attrs({foo:'def',bar:456});
+			model.attr({foo:'def',bar:456});
 
 			equals(el.find('button').attr('name'),'def','named binding is updated');
 			equals(el.find('button').attr('title'),'foo-456','interpolated binding is updated');
 		});
 	});
 	test("bindClass", function(){
-		var model = new ($.Model)({foo:true});
+		var list = new TestModel.List([]);
+		var model = new $.Observe({foo:true,list:list});
 		render('bindClass',model,function(el) {
 			el = el.find('input');
 			ok(el.hasClass('foo'),'class is added');
 			ok(!el.hasClass('bar'),'class is not added');
+			ok(!el.hasClass('baz'),'list class is not added');
+			ok(el.hasClass('qux'),'list class is added');
 
 			model.attr('foo',false);
+			list.push(new $.Observe({}));
 
 			ok(el.hasClass('bar'),'class is added');
 			ok(!el.hasClass('foo'),'class is removed');
+			ok(el.hasClass('baz'),'list class is removed');
+			ok(!el.hasClass('qux'),'list class is added');
+
 		});
 	});
 	test("bindHtml", function(){
-		var model = new ($.Model)({foo:'<em>Hello</em> World!'});
+		var model = new $.Observe({foo:'<em>Hello</em> World!'});
 		render('bindHtml',model,function(el) {
 			el = el.find('p');
-			equals(el.html(),'<em>Hello</em> World!');
+			equals(el.html().toLowerCase(),'<em>Hello</em> World!'.toLowerCase());
 
 			model.attr('foo','Hi Bob.');
 
@@ -48,7 +58,7 @@ steal.plugins("funcunit/qunit", "live_handlebars",'jquery/model','jquery/model/l
 	});
 	test("bindList", function(){
 		expect(5);
-		var list = $.Model.models([{
+		var list = TestModel.models([{
 			id: 1,
 			name: 'foo',
 			count: 0
@@ -76,7 +86,7 @@ steal.plugins("funcunit/qunit", "live_handlebars",'jquery/model','jquery/model/l
 			names('in order by name','abc bar foo xyz');
 			list.remove(list[1]);
 			names('item removed','abc foo xyz');
-			list.push($.Model.model({name:'beforeMe',id:6}));
+			list.push(TestModel.model({name:'beforeMe',id:6}));
 			names('item added','abc beforeMe foo xyz');
 
 			el.one('beforeAdd.hello',function(ev,data) {
@@ -85,12 +95,12 @@ steal.plugins("funcunit/qunit", "live_handlebars",'jquery/model','jquery/model/l
 			el.one('add.hello',function(ev) {
 				equals($(ev.target).data('name'),'xxx','add event published');
 			});
-			list.push($.Model.model({name:'xxx',id:7}));
+			list.push(TestModel.model({name:'xxx',id:7}));
 			names('insertion point changed','abc xxx beforeMe foo xyz');
 		});
 	});
 	test("bindProp", function(){
-		var model = new ($.Model)({foo:true});
+		var model = new $.Observe({foo:true});
 		render('bindProp',model,function(el) {
 			el = el.find('input');
 			ok(!el.is(':checked'),'is not checked');
@@ -103,7 +113,7 @@ steal.plugins("funcunit/qunit", "live_handlebars",'jquery/model','jquery/model/l
 		});
 	});
 	test("bindText", function(){
-		var model = new ($.Model)({foo:'<Hello> World!'});
+		var model = new $.Observe({foo:'<Hello> World!'});
 		render('bindText',model,function(el) {
 			el = el.find('p');
 			equals(el.text(),'<Hello> World!');
@@ -114,7 +124,7 @@ steal.plugins("funcunit/qunit", "live_handlebars",'jquery/model','jquery/model/l
 		});
 	});
 	test("bindVal", function(){
-		var model = new ($.Model)({foo:'foo'});
+		var model = new $.Observe({foo:'foo'});
 		render('bindVal',model,function(el) {
 			el = el.find('input');
 			equals(el.val(),'foo-foo');
@@ -122,6 +132,23 @@ steal.plugins("funcunit/qunit", "live_handlebars",'jquery/model','jquery/model/l
 			model.attr('foo','bar');
 
 			equals(el.val(),'foo-bar');
+
+			model.attr('foo','');
+			equals(el.last().val(),'');
+		});
+	});
+
+	test("bindSelect", function(){
+		var model = new $.Observe({foo:'b'});
+		render('bindSelect',model,function(el) {
+			el = el.find('select');
+			equals(el.find(':selected').val(),'b');
+
+			model.attr('foo','c');
+			equals(el.find(':selected').val(),'c');
+
+			model.attr('foo',42);
+			equals(el.find(':selected').val(),'42');
 		});
 	});
 
@@ -132,7 +159,7 @@ steal.plugins("funcunit/qunit", "live_handlebars",'jquery/model','jquery/model/l
 	});
 
 	test("hookupModel", function(){
-		var model = new ($.Model)({foo:'foo'});
+		var model = new TestModel({foo:'foo'});
 		render('hookupModel',model,function(el) {
 			equals( el.find('div').model(), model, 'model hooked up' );
 		});
