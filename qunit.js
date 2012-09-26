@@ -110,6 +110,74 @@ steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jqu
 			names('insertion point changed','abc xxx beforeMe foo xyz');
 		});
 	});
+	test("bindList - Observe.List of simple values", function(){
+		expect(5);
+		var list = new $.Observe.List([
+			'foo','bar','xyz','abc'
+		]);
+		render('bindObserveList',list,function(el) {
+			el = el.find('ul');
+
+			function names(message,values) {
+				equals($.map(el.find('li'),function(el) { return $(el).text(); }).join(' '),
+					values, message);
+			}
+
+			names('in order by name','abc bar foo xyz');
+			list.splice(1,1);
+			names('item removed','abc foo xyz');
+			list.push('beforeMe');
+			names('item added','abc beforeMe foo xyz');
+
+			el.one('beforeAdd.hello',function(ev,data) {
+				data.before = el.find('li:contains("beforeMe")');
+			});
+			el.one('add.hello',function(ev) {
+				equals($(ev.target).text(),'xxx','add event published');
+			});
+			list.push('xxx');
+			names('insertion point changed','abc xxx beforeMe foo xyz');
+		});
+	});
+	test("bindList - Observe.List of Observe", function(){
+		expect(5);
+		var list = new $.Observe.List([{
+			name: 'foo',
+			count: 0
+		},{
+			name: 'bar',
+			count: 1
+		},{
+			name: 'xyz',
+			count: 5
+		},{
+			name: 'abc',
+			count: 3
+		}]);
+		render('bindList',list,function(el) {
+			el = el.find('ul');
+
+			function names(message,values) {
+				equals($.map(el.find('.name'),function(el) { return $(el).text(); }).join(' '),
+					values, message);
+			}
+
+			names('in order by name','abc bar foo xyz');
+			list.splice(1,1);
+			names('item removed','abc foo xyz');
+			list.push(new $.Observe({name:'beforeMe',id:6}));
+			names('item added','abc beforeMe foo xyz');
+
+			el.one('beforeAdd.hello',function(ev,data) {
+				data.before = el.find('[data-name="beforeMe"]');
+			});
+			el.one('add.hello',function(ev) {
+				equals($(ev.target).data('name'),'xxx','add event published');
+			});
+			list.push(new $.Observe({name:'xxx',id:7}));
+			names('insertion point changed','abc xxx beforeMe foo xyz');
+		});
+	});
 	test("bindProp", function(){
 		var model = new $.Observe({foo:true});
 		render('bindProp',model,function(el) {

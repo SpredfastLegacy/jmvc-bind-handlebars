@@ -1,8 +1,9 @@
 /**
  * (c) 2012 Spredfast, Inc. BSD Licensed; see LICENSE.txt
  */
-steal("jquery","jquery/lang/string","jquery/model","mustache",function() {
-
+steal("jquery","jquery/lang/string","jquery/model","mustache",function($) {
+	"use strict";
+	/*global Handlebars can */
 	var toString = Object.prototype.toString;
 
 	var _ = {
@@ -52,6 +53,7 @@ steal("jquery","jquery/lang/string","jquery/model","mustache",function() {
 	}
 
 	function bindings(obj,el,createBinder) {
+		/*jshint validthis:true */
 		var model = this;
 		_.map(obj,function(value,key,obj) {
 			var binding = createBinder.call(this,value,key,obj),
@@ -114,6 +116,7 @@ steal("jquery","jquery/lang/string","jquery/model","mustache",function() {
 	// in the options hash
 	// either ctx or this is bound to, depending on who has a bind function
 	function bindMany(ctx,options,update) {
+		/*jshint validthis:true */
 		if(!ctx.bind) {
 			options = ctx;
 			ctx = this;
@@ -161,12 +164,14 @@ steal("jquery","jquery/lang/string","jquery/model","mustache",function() {
 
 	// bind to a single attribute change
 	function bindOne(attr,options,update) {
+		/*jshint validthis:true */
 		var ctx = options.hash.context || this;
 		return bindMany.call(this,ctx,{hash:{attr:attr}},update);
 	}
 
 	// run all the hookups attached to el
 	function runHookups(el) {
+		/*jshint validthis:true */
 		el = $(el);
 		_.each(el.data(),function(value,key) {
 			var id;
@@ -222,6 +227,10 @@ steal("jquery","jquery/lang/string","jquery/model","mustache",function() {
 		}) +'></span>';
 	});
 
+	// class we add ot each item to mark it as part of the bound list
+	var LIST_BINDING = 'live-handlebars-list-';
+	// data key for the custom item id
+	var ITEM_BINDING = 'live-handlebars-list-item-id';
 	Handlebars.registerHelper('bindList',function(ctx,options) {
 		if(!ctx.bind) {
 			options = ctx;
@@ -231,7 +240,7 @@ steal("jquery","jquery/lang/string","jquery/model","mustache",function() {
 		var id = listId, ns = '',
 			sort = options.hash.sortBy;
 		var sortBy = sort ? _.isFunction(sort) ? sort : function(model) {
-			return model && model.attr(sort);
+			return sort === '.' ? model : model && model.attr && model.attr(sort);
 		} : false;
 		if(options.hash.namespace) {
 			ns = '.' + options.hash.namespace;
@@ -240,18 +249,54 @@ steal("jquery","jquery/lang/string","jquery/model","mustache",function() {
 			if(!sortBy) return;
 
 			var value = sortBy(model);
-			var before = _.find(ctx.elements(el),function(item) {
-				return sortBy($(item).model(model.constructor)) > value;
+			var before = _.find(el.find('.'+LIST_BINDING+id),function(item) {
+				return sortBy(modelStore[$(item).data(ITEM_BINDING)].value) > value;
 			});
 			return before && $(before);
+		}
+		var modelStore = {}, modelIds = 0;
+		function lookupModel(model,remove) {
+			var type = model.constructor,
+				idProp = type && type.id,
+				id = model.attr && model.attr(idProp),
+				eq = id ? function(m) {
+					return m instanceof type && m.attr(idProp) === id;
+				} : function(m) {
+					return m === model;
+				}, m;
+			_.each(modelStore,function(wrapper) {
+				if(eq(wrapper.value)) {
+					if(remove) {
+						delete modelStore[wrapper.id];
+					}
+					m = wrapper;
+				}
+			});
+			if(!remove && !m) {
+				m = {
+					id: modelIds++,
+					value: model
+				};
+				modelStore[m.id] = m;
+			}
+			return m;
+		}
+		function elements(model,el) {
+			var wrapper = lookupModel(model,true);
+			if(wrapper) {
+				return el.find('.'+LIST_BINDING+id).filter(function() {
+					return $(this).data(ITEM_BINDING) === wrapper.id;
+				});
+			}
+			return $([]);
 		}
 		return addHookup(function(el) {
 			function add(ev,models) {
 				_.each(models,function(model) {
 					var config = {
 						appendTo: el,
-						before: findBefore(model,el),
-						item: $(lists[id].tmpl(model))
+						before: findBefore(model,el,modelStore),
+						item: $($.View.frag(lists[id].tmpl(model))).children()
 					};
 					el.trigger('beforeAdd'+ns,config);
 					if(config.before) {
@@ -259,14 +304,19 @@ steal("jquery","jquery/lang/string","jquery/model","mustache",function() {
 					} else {
 						config.appendTo.append( config.item );
 					}
-					model.hookup(config.item[0]);
-					config.item.trigger('add'+ns);
+					if(model.hookup) {
+						model.hookup(config.item[0]);
+					}
+					var wrapper = lookupModel(model);
+					config.item.
+						data(ITEM_BINDING,wrapper.id).
+						addClass(LIST_BINDING+id).
+						trigger('add'+ns);
 				});
 			}
 			function remove(ev,models) {
 				_.each(models,function(model) {
-					// remove any descendant of el for this model
-					model.elements(el).remove();
+					elements(model,el).remove();
 				});
 			}
 			ctx.bind('add',add);
