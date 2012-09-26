@@ -379,4 +379,19 @@ steal("jquery","jquery/lang/string","jquery/model","mustache",function($) {
 		});
 	});
 
+	return {
+		/**
+		 * Hook for building your own live bindings.
+		 * Usage:
+		 addBindings.call(this,{key:'attribute'},function(el,attrValue,key) {
+			// update el
+			// attrValue is the bound value
+			// key is the key you used in attrs
+		 });
+		 */
+		addBindings: function(attrs,update,ctx) {
+			/*jshint validthis:true */
+			return bindMany.call(this,ctx || this,{hash:attrs},update);
+		}
+	};
 });
