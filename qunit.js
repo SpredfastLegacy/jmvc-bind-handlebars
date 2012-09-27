@@ -26,8 +26,8 @@ steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jqu
 		});
 	});
 	test("bindClass", function(){
-		var list = new TestModel.List([]);
-		var model = new $.Observe({foo:true,list:list});
+		var list = new can.Observe.List([]);
+		var model = new can.Observe({foo:true,list:list});
 		render('bindClass',model,function(el) {
 			el = el.find('input');
 			ok(el.hasClass('foo'),'class is added');

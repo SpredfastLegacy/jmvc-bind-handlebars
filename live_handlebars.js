@@ -1,7 +1,7 @@
 /**
  * (c) 2012 Spredfast, Inc. BSD Licensed; see LICENSE.txt
  */
-steal("jquery","jquery/lang/string","jquery/model","mustache",function($) {
+steal("jquery","can/observe/compute","jquery/lang/string","jquery/model","mustache",function($,compute) {
 	"use strict";
 	/*global Handlebars can */
 	var toString = Object.prototype.toString;
@@ -57,15 +57,11 @@ steal("jquery","jquery/lang/string","jquery/model","mustache",function($) {
 		var model = this;
 		_.map(obj,function(value,key,obj) {
 			var binding = createBinder.call(this,value,key,obj),
-				observed = binding[0],
+				compute = binding[0],
 				binder = binding[1];
-			_.each(observed,function(o) {
-				o.obj.bind(o.attr,binder);
-			});
+			compute.bind('change',binder);
 			el.bind('destroyed',function() {
-				_.each(observed,function(o) {
-					o.obj.unbind(o.attr,binder);
-				});
+				compute.unbind('change',binder);
 			});
 			return binder;
 		});
@@ -102,16 +98,6 @@ steal("jquery","jquery/lang/string","jquery/model","mustache",function($) {
 		}
 	}
 
-	function trapObserved(update) {
-		var observed = [], old = can.Observe.__reading;
-		can.Observe.__reading = function(obj,attr) {
-			observed.push({obj:obj,attr:attr});
-		};
-		update();
-		can.Observe.__reading = old;
-		return observed;
-	}
-
 	// add a binding based on doing substitions on the value for each name="value" pair
 	// in the options hash
 	// either ctx or this is bound to, depending on who has a bind function
@@ -133,31 +119,18 @@ steal("jquery","jquery/lang/string","jquery/model","mustache",function($) {
 					not = !tmpl && bindTo.charAt(0) === '!';
 					bindTo = not ? bindTo.substring(1) : bindTo;
 					length = !tmpl && bindTo.charAt(0) === '#';
-					bindTo = length ? bindTo.substring(1) : bindTo;
+					bindTo = length ? (bindTo.substring(1) + '.length') : bindTo;
 				}
 				function simpleUpdate() {
+					var foo = length;
 					var value = getValue(ctx,bindTo);
-					if(length) {
-						value = value && value.length;
-					}
 					update.call(ctx,el,
 						tmpl ? $.String.sub(bindTo,value) :
 							not ? !value : value,
 						key);
+					return value;
 				}
-				var bound = trapObserved(simpleUpdate);
-				// if it's the length, add a binding to update on add & remove
-				if(length) {
-					var list = getValue(ctx,bindTo);
-					if(!list) {
-						throw new Error(bindTo+' is not defined.');
-					}
-					bound.push({
-						obj: list,
-						attr: 'add remove'
-					});
-				}
-				return [bound,simpleUpdate];
+				return [compute(simpleUpdate),simpleUpdate];
 			});
 		};
 	}
