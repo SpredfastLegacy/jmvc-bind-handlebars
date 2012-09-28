@@ -103,7 +103,7 @@ steal("jquery","can/observe/compute","jquery/lang/string","jquery/model","mustac
 	// either ctx or this is bound to, depending on who has a bind function
 	function bindMany(ctx,options,update) {
 		/*jshint validthis:true */
-		if(!ctx.bind) {
+		if(!options) {
 			options = ctx;
 			ctx = this;
 		}
