@@ -49,7 +49,7 @@ steal("jquery","can/observe/compute","jquery/lang/string","jquery/model","mustac
 		hookups[++id] = fn;
 		return new Handlebars.SafeString(
 			$.View.hook(runHookups) +
-		'" '+PREFIX+id);
+		' '+PREFIX+id);
 	}
 
 	function bindings(obj,el,createBinder) {
