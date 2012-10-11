@@ -178,6 +178,39 @@ steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jqu
 			names('insertion point changed','abc xxx beforeMe foo xyz');
 		});
 	});
+	test("bindList - Unsorted", function(){
+		expect(7);
+		var list = new $.Observe.List([
+			'foo','bar','xyz','abc'
+		]);
+		render('bindListUnsorted',list,function(el) {
+			el = el.find('ul');
+
+			function names(message,values) {
+				equals($.map(el.find('li'),function(el) { return $.trim($(el).text()); }).join(' '),
+					values, message);
+			}
+
+			names('in order by name','Top foo bar xyz abc');
+			list.splice(1,1,'beforeMe');
+			names('item spliced','Top foo beforeMe xyz abc');
+
+			el.one('beforeAdd.hello',function(ev,data) {
+				data.before = el.find('li:contains("beforeMe")');
+			});
+			el.one('add.hello',function(ev) {
+				equals($(ev.target).text(),'yyy','add event published');
+			});
+			list.push('yyy');
+			names('insertion point changed','Top foo yyy beforeMe xyz abc');
+			list.unshift('xxx');
+			names('unshift','Top xxx foo yyy beforeMe xyz abc');
+			list.splice(0,list.length);
+			names('cleared','Top');
+			list.push('blah','goo','gah');
+			names('added to front','Top blah goo gah');
+		});
+	});
 	test("bindProp", function(){
 		var model = new $.Observe({foo:true});
 		render('bindProp',model,function(el) {

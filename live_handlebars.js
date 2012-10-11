@@ -219,8 +219,9 @@ steal("jquery","can/observe/compute","jquery/lang/string","jquery/model","mustac
 			ns = '.' + options.hash.namespace;
 		}
 		function findBefore(model,el) {
-			if(!sortBy) return;
-
+			if(!sortBy) {
+				return;
+			}
 			var value = sortBy(model);
 			var before = _.find(el.find('.'+LIST_BINDING+id),function(item) {
 				return sortBy(modelStore[$(item).data(ITEM_BINDING)].value) > value;
@@ -254,8 +255,8 @@ steal("jquery","can/observe/compute","jquery/lang/string","jquery/model","mustac
 			}
 			return m;
 		}
-		function elements(model,el) {
-			var wrapper = lookupModel(model,true);
+		function elements(model,el,rm) {
+			var wrapper = lookupModel(model,rm);
 			if(wrapper) {
 				return el.find('.'+LIST_BINDING+id).filter(function() {
 					return $(this).data(ITEM_BINDING) === wrapper.id;
@@ -264,16 +265,28 @@ steal("jquery","can/observe/compute","jquery/lang/string","jquery/model","mustac
 			return $([]);
 		}
 		return addHookup(function(el) {
-			function add(ev,models) {
-				_.each(models,function(model) {
+			function add(ev,models,index) {
+				var before;
+				var after;
+				// if there is an element before or after already rendered,
+				// render after or before it
+				if(ctx[index - 1]) {
+					after = elements(ctx[index - 1],el);
+				} else if(ctx[index + models.length]) {
+					before = elements(ctx[index + models.length],el);
+				}
+				_.each(models,function(model,i) {
 					var config = {
 						appendTo: el,
-						before: findBefore(model,el,modelStore),
+						after: after,
+						before: findBefore(model,el) || before,
 						item: $($.View.frag(lists[id].tmpl(model))).children()
 					};
 					el.trigger('beforeAdd'+ns,config);
-					if(config.before) {
+					if(config.before && config.before.length) {
 						config.before.before( config.item );
+					} else if(config.after && config.after.length) {
+						config.after.after( config.item );
 					} else {
 						config.appendTo.append( config.item );
 					}
@@ -289,7 +302,7 @@ steal("jquery","can/observe/compute","jquery/lang/string","jquery/model","mustac
 			}
 			function remove(ev,models) {
 				_.each(models,function(model) {
-					elements(model,el).remove();
+					elements(model,el,true).remove();
 				});
 			}
 			ctx.bind('add',add);
