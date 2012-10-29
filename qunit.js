@@ -7,7 +7,7 @@ steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jqu
 
 	function render(tmpl,data,fn) {
 		var el = $('<div />').appendTo($('body')).
-			html($.View('//live_handlebars/test_views/'+tmpl+'.mustache',data));
+			html(can.view('//live_handlebars/test_views/'+tmpl+'.mustache',data));
 		(fn(el) || $.Deferred().resolve()).then(function() {
 			el.remove();
 		});

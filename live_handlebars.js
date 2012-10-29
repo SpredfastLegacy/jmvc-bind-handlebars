@@ -1,9 +1,9 @@
 /**
  * (c) 2012 Spredfast, Inc. BSD Licensed; see LICENSE.txt
  */
-steal("jquery","can/observe/compute","jquery/lang/string","jquery/model","mustache",function($,compute) {
+steal("jquery","can/observe/compute","can","jquery/lang/string","mustache",function($,compute,can) {
 	"use strict";
-	/*global Handlebars can */
+	/*global Handlebars */
 	var toString = Object.prototype.toString;
 
 	var _ = {
@@ -48,7 +48,7 @@ steal("jquery","can/observe/compute","jquery/lang/string","jquery/model","mustac
 	function addHookup(fn) {
 		hookups[++id] = fn;
 		return new Handlebars.SafeString(
-			$.View.hook(runHookups) +
+			can.view.hook(runHookups) +
 		' '+PREFIX+id);
 	}
 
@@ -280,7 +280,7 @@ steal("jquery","can/observe/compute","jquery/lang/string","jquery/model","mustac
 						appendTo: el,
 						after: after,
 						before: findBefore(model,el) || before,
-						item: $($.View.frag(lists[id].tmpl(model))).children()
+						item: $(can.view.frag(lists[id].tmpl(model))).children()
 					};
 					el.trigger('beforeAdd'+ns,config);
 					if(config.before && config.before.length) {
