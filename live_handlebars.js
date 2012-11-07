@@ -179,13 +179,14 @@ steal("jquery","can/observe/compute","can","jquery/lang/string","mustache",funct
 		var ctx = options.hash.context || this,
 			templateContext = this;
 		return '<span ' + addHookup(function(el) {
-			var parent = $(el).parent(),
+			// XXX put the bindings on a hidden element next to the content.
+			// The placeholder will get destroyed along with the content and unbind.
+			var placeholderEl = $("<span />").addClass('live-handlebars-placeholder').hide(),
 				bind = {_changed:attr},
 				content = $(el);
-			if(!parent.length) {
-				throw new Error('Cannot use bindIf without a wrapper element.');
-			}
-			bindingsSetup(ctx,bind,function(parent,condition) {
+			// XXX jQuery wont do a before on "disconnected" nodes
+			content[0].parentNode.insertBefore( placeholderEl[0], content[0] );
+			bindingsSetup(ctx,bind,function(placeholderEl,condition) {
 				var newContent = $('<div/>').
 					html( (condition ? options.fn : options.inverse)(templateContext) ).
 					children();
@@ -194,9 +195,14 @@ steal("jquery","can/observe/compute","can","jquery/lang/string","mustache",funct
 					newContent = $('<span></span>');
 				}
 
-				content.replaceWith(newContent);
+				// XXX we're disconnected here too, so have to implement our own replaceWith.
+				var contentNode = content[0];
+				newContent.each(function() {
+					contentNode.parentNode.insertBefore( this, contentNode );
+				});
+				content.remove();
 				content = newContent;
-			})(parent);
+			})(placeholderEl);
 		}) +'></span>';
 	});
 
