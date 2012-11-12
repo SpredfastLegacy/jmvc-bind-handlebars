@@ -177,7 +177,8 @@ steal("jquery","can/observe/compute","can","jquery/lang/string","mustache",funct
 
 	Handlebars.registerHelper('bindIf',function(attr,options) {
 		var ctx = options.hash.context || this,
-			templateContext = this;
+			templateContext = this,
+			oldValue;
 		return '<span ' + addHookup(function(el) {
 			// XXX put the bindings on a hidden element next to the content.
 			// The placeholder will get destroyed along with the content and unbind.
@@ -187,6 +188,15 @@ steal("jquery","can/observe/compute","can","jquery/lang/string","mustache",funct
 			// XXX jQuery wont do a before on "disconnected" nodes
 			content[0].parentNode.insertBefore( placeholderEl[0], content[0] );
 			bindingsSetup(ctx,bind,function(placeholderEl,condition) {
+				// XXX important, coerce to a boolean. We don't care if it changed
+				// from 1 to 2, only the truthyness.
+				condition = !!condition;
+				// don't re-render if the result hasn't changed
+				if ( oldValue === condition ) {
+					return;
+				}
+				oldValue = condition;
+
 				var newContent = $('<div/>').
 					html( (condition ? options.fn : options.inverse)(templateContext) ).
 					children();
