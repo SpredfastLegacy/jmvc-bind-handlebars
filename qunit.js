@@ -179,7 +179,7 @@ steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jqu
 		});
 	});
 	test("bindList - Unsorted", function(){
-		expect(7);
+		expect(8);
 		var list = new $.Observe.List([
 			'foo','bar','xyz','abc'
 		]);
@@ -209,6 +209,8 @@ steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jqu
 			names('cleared','Top');
 			list.push('blah','goo','gah');
 			names('added to front','Top blah goo gah');
+			list.push('foo','bar','baz');
+			names('added to end','Top blah goo gah foo bar baz');
 		});
 	});
 	test("bindProp", function(){

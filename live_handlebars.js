@@ -303,6 +303,8 @@ steal("jquery","can/observe/compute","can","jquery/lang/string","mustache",funct
 						config.before.before( config.item );
 					} else if(config.after && config.after.length) {
 						config.after.after( config.item );
+						// XXX following items should come after this one
+						after = config.item;
 					} else {
 						config.appendTo.append( config.item );
 					}
