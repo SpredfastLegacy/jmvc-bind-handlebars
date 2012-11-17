@@ -1,0 +1,10 @@
+<ul {{bindList this}} class="list">
+{{#bindItem}}
+	<li class="group" data-letter="{{letter}}"><span class="letter">{{letter}}</span>
+		<ol {{bindList list}}>
+		{{#bindItem}}
+			<li class="word">{{this}}
+		{{/bindItem}}
+		</ol>
+{{/bindItem}}
+</ul>

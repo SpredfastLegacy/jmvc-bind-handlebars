@@ -7,10 +7,24 @@ steal("jquery","can/observe/compute","can","jquery/lang/string","mustache",funct
 	var toString = Object.prototype.toString;
 
 	var _ = {
+		filter: function(obj,iterator,context) {
+			var results = [];
+			this.each(obj,function(value,key) {
+				if(iterator.call(context,value,key)) {
+					results.push(value);
+				}
+			});
+			return results;
+		},
 		map: function(obj,iterator,context) {
 			return $.map(obj,function(value,key) {
 				return iterator.call(context,value,key);
 			});
+		},
+		not: function(fn) {
+			return function() {
+				return !fn.apply(this,arguments);
+			};
 		},
 		keys: function(obj) {
 			return _.map(obj,function(v,key) {
@@ -323,11 +337,56 @@ steal("jquery","can/observe/compute","can","jquery/lang/string","mustache",funct
 					elements(model,el,true).remove();
 				});
 			}
+
+			function notInList(list) {
+				return _.isFunction( list.get ) ? function(item) {
+					return list.get(item).length === 0;
+				} : function(item) {
+					return !~list.indexOf(item);
+				};
+			}
+
+			function diffLists(oldList,newList) {
+				// first remove anything in oldList not in newList
+				remove(null, _.filter(oldList, notInList(newList) ));
+				// then add anything in newList, not in old list
+				var notInOld = notInList(oldList);
+				_.each(newList, function(item,i) {
+					if(notInOld(item)) {
+						add(null, [item], i );
+					}
+				});
+				// then pull the elements out in order and reappend them to
+				// ensure the DOM order matches the list order
+				var temp = $("<div/>");
+				_.each(newList, function(item) {
+					temp.append( elements(item,el).detach() );
+				});
+				el.append(temp.children());
+			}
+
+			function updateList() {
+				ctx.unbind('add',add);
+				ctx.unbind('remove',remove);
+				var oldList = ctx;
+				ctx = computedList();
+				ctx.bind('add',add);
+				ctx.bind('remove',remove);
+				diffLists(oldList,ctx);
+			}
+
+			var orig = ctx;
+			// allow the list to be computed
+			var computedList = compute(ctx);
+			ctx = computedList();
+			computedList.bind("change",updateList);
+
 			ctx.bind('add',add);
 			ctx.bind('remove',remove);
 			el.bind('destroyed',function() {
 				ctx.unbind('add',add);
 				ctx.unbind('remove',remove);
+				computedList.unbind("change",updateList);
 				delete lists[id];
 			});
 			// add all the existing models

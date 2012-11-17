@@ -1,9 +1,16 @@
-steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jquery/lang/observe",
-	function() {
+steal("can","jquery","funcunit/qunit","jquery/model","jquery/model/list","live_handlebars",
+	"can/observe/list",
+	function(can,$) {
+	"use strict";
+	/*global QUnit module test equal ok expect asyncTest stop start */
 
 	module("live_handlebars");
 
 	var TestModel = can.Model({});
+
+	function joinText(els) {
+		return $.map(els,function(el) { return $.trim($(el).text()); }).join(' ');
+	}
 
 	function render(tmpl,data,fn) {
 		var el = $('<div />').appendTo($('body')).
@@ -14,15 +21,15 @@ steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jqu
 	}
 
 	test("bindAttr", function(){
-		var model = new $.Observe({foo:123,bar:'abc'});
+		var model = new can.Observe({foo:123,bar:'abc'});
 		render('bindAttr',model,function(el) {
-			equals(el.find('button').attr('name'),'123','can bind by name');
-			equals(el.find('button').attr('title'),'foo-abc','can bind and interpolate');
+			equal(el.find('button').attr('name'),'123','can bind by name');
+			equal(el.find('button').attr('title'),'foo-abc','can bind and interpolate');
 
 			model.attr({foo:'def',bar:456});
 
-			equals(el.find('button').attr('name'),'def','named binding is updated');
-			equals(el.find('button').attr('title'),'foo-456','interpolated binding is updated');
+			equal(el.find('button').attr('name'),'def','named binding is updated');
+			equal(el.find('button').attr('title'),'foo-456','interpolated binding is updated');
 		});
 	});
 	test("bindClass", function(){
@@ -36,7 +43,7 @@ steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jqu
 			ok(el.hasClass('qux'),'list class is added');
 
 			model.attr('foo',false);
-			list.push(new $.Observe({}));
+			list.push(new can.Observe({}));
 
 			ok(el.hasClass('bar'),'class is added');
 			ok(!el.hasClass('foo'),'class is removed');
@@ -46,25 +53,25 @@ steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jqu
 		});
 	});
 	test("bindHtml", function(){
-		var model = new $.Observe({foo:'<em>Hello</em> World!'});
+		var model = new can.Observe({foo:'<em>Hello</em> World!'});
 		render('bindHtml',model,function(el) {
 			el = el.find('p');
-			equals(el.html().toLowerCase(),'<em>Hello</em> World!'.toLowerCase());
+			equal(el.html().toLowerCase(),'<em>Hello</em> World!'.toLowerCase());
 
 			model.attr('foo','Hi Bob.');
 
-			equals(el.html(),'Hi Bob.');
+			equal(el.html(),'Hi Bob.');
 		});
 	});
 	test("bindIf", function(){
 		var model = new ($.Model)({foo:{boolean:false,bar:123}});
 		render('bindIf',model,function(parent) {
 			var el = parent.find('p');
-			equals(el.text(),'Not foo','renders else');
+			equal(el.text(),'Not foo','renders else');
 
 			model.attr('foo.boolean',true);
 
-			equals(parent.find('p').text(),'Foo: 123');
+			equal(parent.find('p').text(),'Foo: 123');
 		});
 	});
 	test("bindList", function(){
@@ -90,8 +97,7 @@ steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jqu
 			el = el.find('ul');
 
 			function names(message,values) {
-				equals($.map(el.find('.name'),function(el) { return $(el).text(); }).join(' '),
-					values, message);
+				equal(joinText(el.find('.name')),values, message);
 			}
 
 			names('in order by name','abc bar foo xyz');
@@ -104,7 +110,7 @@ steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jqu
 				data.before = el.find('[data-name="beforeMe"]');
 			});
 			el.one('add.hello',function(ev) {
-				equals($(ev.target).data('name'),'xxx','add event published');
+				equal($(ev.target).data('name'),'xxx','add event published');
 			});
 			list.push(TestModel.model({name:'xxx',id:7}));
 			names('insertion point changed','abc xxx beforeMe foo xyz');
@@ -112,15 +118,14 @@ steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jqu
 	});
 	test("bindList - Observe.List of simple values", function(){
 		expect(5);
-		var list = new $.Observe.List([
+		var list = new can.Observe.List([
 			'foo','bar','xyz','abc'
 		]);
 		render('bindObserveList',list,function(el) {
 			el = el.find('ul');
 
 			function names(message,values) {
-				equals($.map(el.find('li'),function(el) { return $(el).text(); }).join(' '),
-					values, message);
+				equal(joinText(el.find('li')),values, message);
 			}
 
 			names('in order by name','abc bar foo xyz');
@@ -133,7 +138,7 @@ steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jqu
 				data.before = el.find('li:contains("beforeMe")');
 			});
 			el.one('add.hello',function(ev) {
-				equals($(ev.target).text(),'xxx','add event published');
+				equal($(ev.target).text(),'xxx','add event published');
 			});
 			list.push('xxx');
 			names('insertion point changed','abc xxx beforeMe foo xyz');
@@ -141,7 +146,7 @@ steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jqu
 	});
 	test("bindList - Observe.List of Observe", function(){
 		expect(5);
-		var list = new $.Observe.List([{
+		var list = new can.Observe.List([{
 			name: 'foo',
 			count: 0
 		},{
@@ -158,37 +163,35 @@ steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jqu
 			el = el.find('ul');
 
 			function names(message,values) {
-				equals($.map(el.find('.name'),function(el) { return $(el).text(); }).join(' '),
-					values, message);
+				equal(joinText(el.find('.name')),values, message);
 			}
 
 			names('in order by name','abc bar foo xyz');
 			list.splice(1,1);
 			names('item removed','abc foo xyz');
-			list.push(new $.Observe({name:'beforeMe',id:6}));
+			list.push(new can.Observe({name:'beforeMe',id:6}));
 			names('item added','abc beforeMe foo xyz');
 
 			el.one('beforeAdd.hello',function(ev,data) {
 				data.before = el.find('[data-name="beforeMe"]');
 			});
 			el.one('add.hello',function(ev) {
-				equals($(ev.target).data('name'),'xxx','add event published');
+				equal($(ev.target).data('name'),'xxx','add event published');
 			});
-			list.push(new $.Observe({name:'xxx',id:7}));
+			list.push(new can.Observe({name:'xxx',id:7}));
 			names('insertion point changed','abc xxx beforeMe foo xyz');
 		});
 	});
 	test("bindList - Unsorted", function(){
 		expect(8);
-		var list = new $.Observe.List([
+		var list = new can.Observe.List([
 			'foo','bar','xyz','abc'
 		]);
 		render('bindListUnsorted',list,function(el) {
 			el = el.find('ul');
 
 			function names(message,values) {
-				equals($.map(el.find('li'),function(el) { return $.trim($(el).text()); }).join(' '),
-					values, message);
+				equal(joinText(el.find('li')),values, message);
 			}
 
 			names('in order by name','Top foo bar xyz abc');
@@ -199,7 +202,7 @@ steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jqu
 				data.before = el.find('li:contains("beforeMe")');
 			});
 			el.one('add.hello',function(ev) {
-				equals($(ev.target).text(),'yyy','add event published');
+				equal($(ev.target).text(),'yyy','add event published');
 			});
 			list.push('yyy');
 			names('insertion point changed','Top foo yyy beforeMe xyz abc');
@@ -213,8 +216,61 @@ steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jqu
 			names('added to end','Top blah goo gah foo bar baz');
 		});
 	});
+	test("bindList - computed", function(){
+		expect(6);
+		var ifoo = 0;
+		var Letter = can.Model({
+			init: function() {
+				this.list._foo = ifoo++;
+			}
+		});
+		var filter = can.compute("");
+		var items = new can.Observe.List(["red","green","blue","read","grow","zebra"]);
+		var groups = can.compute(function() {
+			var groups = {};
+			items.attr("length");
+			can.each(items,function(value) {
+				var letter = value[0].toLowerCase();
+				groups[letter] = true;
+			});
+			return groups;
+		});
+		var list = can.compute(function() {
+			return new Letter.List( can.map(groups(),function(list,letter) {
+				return new Letter({
+					id: letter,
+					letter: letter,
+					list: can.compute(function() {
+						var matches = [];
+						for(var i = 0; i < items.attr("length"); i++) {
+							if( items[i][0].toLowerCase() === letter ) {
+								if( !filter() || ~items[i].indexOf(filter()) ) {
+									matches.push(items[i]);
+								}
+							}
+						}
+						return new can.Observe.List(matches);
+					})
+				});
+			}) );
+		});
+		render('bindListComputed',list,function(el) {
+			equal( joinText(el.find(".letter")),"r g b z");
+			equal(el.find("[data-letter=r] .word").length,2);
+
+			// can we update the compute?
+			items.splice(0,3,"Red","Green","Black");
+			equal( joinText( el.find("[data-letter=r] .word") ), "Red read");
+			equal( joinText( el.find("[data-letter=g] .word") ), "Green grow");
+			equal( joinText( el.find("[data-letter=b] .word") ), "Black");
+			// can we update a list inside the compute?
+			var l = list()[1].list();
+			filter("ee");
+			equal( joinText( el.find("[data-letter=g] .word") ), "Green");
+		});
+	});
 	test("bindProp", function(){
-		var model = new $.Observe({foo:true});
+		var model = new can.Observe({foo:true});
 		render('bindProp',model,function(el) {
 			el = el.find('input');
 			ok(!el.is(':checked'),'is not checked');
@@ -227,42 +283,42 @@ steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jqu
 		});
 	});
 	test("bindText", function(){
-		var model = new $.Observe({foo:'<Hello> World!'});
+		var model = new can.Observe({foo:'<Hello> World!'});
 		render('bindText',model,function(el) {
 			el = el.find('p');
-			equals(el.text(),'<Hello> World!');
+			equal(el.text(),'<Hello> World!');
 
 			model.attr('foo','Hi Bob.');
 
-			equals(el.text(),'Hi Bob.');
+			equal(el.text(),'Hi Bob.');
 		});
 	});
 	test("bindVal", function(){
-		var model = new $.Observe({foo:'foo'});
+		var model = new can.Observe({foo:'foo'});
 		render('bindVal',model,function(el) {
 			el = el.find('input');
-			equals(el.val(),'foo-foo');
+			equal(el.val(),'foo-foo');
 
 			model.attr('foo','bar');
 
-			equals(el.val(),'foo-bar');
+			equal(el.val(),'foo-bar');
 
 			model.attr('foo','');
-			equals(el.last().val(),'');
+			equal(el.last().val(),'');
 		});
 	});
 
 	test("bindSelect", function(){
-		var model = new $.Observe({foo:'b'});
+		var model = new can.Observe({foo:'b'});
 		render('bindSelect',model,function(el) {
 			el = el.find('select');
-			equals(el.find(':selected').val(),'b');
+			equal(el.find(':selected').val(),'b');
 
 			model.attr('foo','c');
-			equals(el.find(':selected').val(),'c');
+			equal(el.find(':selected').val(),'c');
 
 			model.attr('foo',42);
-			equals(el.find(':selected').val(),'42');
+			equal(el.find(':selected').val(),'42');
 		});
 	});
 
@@ -275,7 +331,7 @@ steal("funcunit/qunit","jquery/model","jquery/model/list","live_handlebars","jqu
 	test("hookupModel", function(){
 		var model = new TestModel({foo:'foo'});
 		render('hookupModel',model,function(el) {
-			equals( el.find('div').model(), model, 'model hooked up' );
+			equal( el.find('div').model(), model, 'model hooked up' );
 		});
 	});
 
