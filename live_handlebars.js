@@ -455,6 +455,12 @@ steal("jquery","can/observe/compute","can","jquery/lang/string","mustache",funct
 		addBindings: function(attrs,update,ctx) {
 			/*jshint validthis:true */
 			return bindMany.call(this,ctx || this,{hash:attrs},update);
-		}
+		},
+		/**
+		 * @param {Function} fn the function to hookup. Will be passed the element when
+		 * it is rendered.
+		 * @return {String} the hookup data attribute definition.
+		 */
+		addHookup: addHookup
 	};
 });
