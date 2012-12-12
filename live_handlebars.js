@@ -1,7 +1,7 @@
 /**
  * (c) 2012 Spredfast, Inc. BSD Licensed; see LICENSE.txt
  */
-steal("jquery","can/observe/compute","can","jquery/lang/string","mustache",function($,compute,can) {
+steal("jquery","can/observe/compute","can","jquery/lang/string","mustache","jquery/view",function($,compute,can) {
 	"use strict";
 	/*global Handlebars */
 	var toString = Object.prototype.toString;
@@ -298,6 +298,10 @@ steal("jquery","can/observe/compute","can","jquery/lang/string","mustache",funct
 			function add(ev,models,index) {
 				var before;
 				var after;
+				if(options.hash.unique) {
+					// remove duplicates
+					remove(ev,models);
+				}
 				// if there is an element before or after already rendered,
 				// render after or before it
 				if(ctx[index - 1]) {

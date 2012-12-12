@@ -1,0 +1,7 @@
+{{#bindIf "foo"}}
+<ul {{bindList bar unique=true}}>
+{{#bindItem}}
+	<li>{{name}}
+{{/bindItem}}
+</ul>
+{{/bindIf}}

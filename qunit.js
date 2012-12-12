@@ -269,6 +269,24 @@ steal("can","jquery","funcunit/qunit","jquery/model","jquery/model/list","live_h
 			equal( joinText( el.find("[data-letter=g] .word") ), "Green");
 		});
 	});
+	test("bindList with bindIf", 2, function(){
+		var data = new can.Observe({
+			foo: false,
+			bar: []
+		});
+		render('bindListAndIf',data,function(el) {
+			function names(message,values) {
+				equal(joinText(el.find('li')),values, message);
+			}
+
+			names('no names','');
+			data.attr({
+				foo: true,
+				bar: [{id:1,name:'foo'},{id:2,name:'bar'}]
+			},true);
+			names('names not duplicated','foo bar');
+		});
+	});
 	test("bindProp", function(){
 		var model = new can.Observe({foo:true});
 		render('bindProp',model,function(el) {
