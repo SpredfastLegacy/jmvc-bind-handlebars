@@ -296,6 +296,9 @@ steal("jquery","can/observe/compute","can","jquery/lang/string","mustache","jque
 		}
 		return addHookup(function(el) {
 			function add(ev,models,index) {
+				if(!lists[id]) {
+					return;
+				}
 				var before;
 				var after;
 				if(options.hash.unique) {
