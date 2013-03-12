@@ -340,6 +340,57 @@ steal("can","jquery","funcunit/qunit","jquery/model","jquery/model/list","live_h
 		});
 	});
 
+	test("nested bindIf is properly unbound", 6, function() {
+		var Model = can.Model.extend({
+			childCompute: function() {
+				this.attr("cFlag");
+				// it doesn't matter what this returns as long as cFlag is part of the compute
+				return false;
+			},
+			// this choses between child and something else. if it's true, child is rendered
+			parentCompute: function() {
+				return this.attr("cFlag");
+			}
+		});
+
+		var instance = new Model({
+			id: 123,
+			cFlag: false
+		});
+
+		function timeout(delay) {
+			var done = $.Deferred();
+			setTimeout(function() {
+				done.resolve();
+			}, delay || 25);
+			return done.promise();
+		}
+
+		render("nestedBindIf", instance, function(el) {
+			equal($.trim(el.text()), "Other");
+			instance.attr({
+				cFlag: true
+			});
+
+			equal($.trim(el.text()), "Child");
+
+			instance.attr({
+				cFlag: false
+			});
+
+			equal($.trim(el.text()), "Other");
+
+			instance.attr({
+				cFlag: true
+			});
+			ok(Model.store["123"], "model in store");
+			equal($.trim(el.text()), "Child");
+
+			el.html("<p>Hello world");
+			ok(!Model.store["123"], "model not leaked in store");
+		});
+	});
+
 	test("derrived attributes", function(){
 	});
 

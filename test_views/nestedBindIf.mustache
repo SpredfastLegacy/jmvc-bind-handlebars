@@ -1,0 +1,9 @@
+{{#bindIf parentCompute}}
+	{{#bindIf childCompute}}
+		<span>Never Rendered</span>
+	{{else}}
+		<span>Child</span>
+	{{/bindIf}}
+{{else}}
+	<span>Other</span>
+{{/bindIf}}
