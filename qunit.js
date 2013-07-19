@@ -401,6 +401,7 @@ $) {
 		});
 	});
 
+/* TODO TD-93
 	test("nested bindIf is properly unbound", 6, function() {
 		var Model = can.Model.extend({
 			childCompute: function() {
@@ -451,6 +452,7 @@ $) {
 			ok(!Model.store["123"], "model not leaked in store");
 		});
 	});
+//*/
 
 	test("derrived attributes", function() {});
 
