@@ -373,26 +373,33 @@ steal("jquery","can/observe/compute","can","jquery/lang/string","mustache","jque
 			}
 
 			function updateList() {
-				ctx.unbind('add',add);
-				ctx.unbind('remove',remove);
+				if (ctx.unbind) {
+					ctx.unbind('add',add);
+					ctx.unbind('remove',remove);
+				}
 				var oldList = ctx;
 				ctx = computedList();
-				ctx.bind('add',add);
-				ctx.bind('remove',remove);
+				if (ctx.bind) {
+					ctx.bind('add',add);
+					ctx.bind('remove',remove);
+				}
 				diffLists(oldList,ctx);
 			}
 
-			var orig = ctx;
 			// allow the list to be computed
 			var computedList = compute(ctx);
 			ctx = computedList();
 			computedList.bind("change",updateList);
 
-			ctx.bind('add',add);
-			ctx.bind('remove',remove);
+			if (ctx.bind) {
+				ctx.bind('add',add);
+				ctx.bind('remove',remove);
+			}
 			el.bind('destroyed',function() {
-				ctx.unbind('add',add);
-				ctx.unbind('remove',remove);
+				if (ctx.unbind) {
+					ctx.unbind('add',add);
+					ctx.unbind('remove',remove);
+				}
 				computedList.unbind("change",updateList);
 				delete lists[id];
 			});

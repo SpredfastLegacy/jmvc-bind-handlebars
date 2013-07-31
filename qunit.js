@@ -316,6 +316,58 @@ $) {
 			equal(joinText(el.find("[data-letter=g] .word")), "Green");
 		});
 	});
+	test("bindList - compute Array", function() {
+		expect(6);
+		var ifoo = 0;
+		var Letter = can.Model({
+			init: function() {
+				this.list._foo = ifoo++;
+			}
+		});
+		var filter = can.compute("");
+		var items = new can.Observe.List(["red", "green", "blue", "read", "grow", "zebra"]);
+		var groups = can.compute(function() {
+			var groups = {};
+			items.attr("length");
+			can.each(items, function(value) {
+				var letter = value[0].toLowerCase();
+				groups[letter] = true;
+			});
+			return groups;
+		});
+		var list = can.compute(function() {
+			return can.map(groups(), function(list, letter) {
+				return new Letter({
+					id: letter,
+					letter: letter,
+					list: can.compute(function() {
+						var matches = [];
+						for (var i = 0; i < items.attr("length"); i++) {
+							if (items[i][0].toLowerCase() === letter) {
+								if (!filter() || ~items[i].indexOf(filter())) {
+									matches.push(items[i]);
+								}
+							}
+						}
+						return matches;
+					})
+				});
+			});
+		});
+		render(bindListComputed, list, function(el) {
+			equal(joinText(el.find(".letter")), "r g b z");
+			equal(el.find("[data-letter=r] .word").length, 2);
+
+			// can we update the compute?
+			items.splice(0, 3, "Red", "Green", "Black");
+			equal(joinText(el.find("[data-letter=r] .word")), "Red read");
+			equal(joinText(el.find("[data-letter=g] .word")), "Green grow");
+			equal(joinText(el.find("[data-letter=b] .word")), "Black");
+			// can we update a list inside the compute?
+			filter("ee");
+			equal(joinText(el.find("[data-letter=g] .word")), "Green");
+		});
+	});
 	test("bindList with bindIf", 2, function() {
 		var data = new can.Observe({
 			foo: false,
