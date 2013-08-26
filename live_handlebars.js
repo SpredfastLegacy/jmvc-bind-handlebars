@@ -68,7 +68,6 @@ steal("jquery","can/observe/compute","can","jquery/lang/string","mustache","jque
 
 	function bindings(obj,el,createBinder) {
 		/*jshint validthis:true */
-		var model = this;
 		_.map(obj,function(value,key,obj) {
 			var binding = createBinder.call(this,value,key,obj),
 				compute = binding[0],
@@ -447,6 +446,40 @@ steal("jquery","can/observe/compute","can","jquery/lang/string","mustache","jque
 		});
 	});
 
+	var Live;
+
+	var contents = {},
+		contentId = 0;
+	Handlebars.registerHelper("bindContent", function(options) {
+		var cid = ++contentId,
+			ctx = this;
+		// the batch pa
+		var afterBatch = options.hash.batch || Live.afterBatch;
+		return addHookup(function(el) {
+			var content = contents[cid];
+			delete contents[cid];
+
+			// update the HTML whenever it changes
+			var html = compute(function () {
+				return content.fn(this);
+			}, ctx);
+			function update() {
+				el.html(html());
+			}
+			bindings({
+				html: html
+			}, el, function(html) {
+				return [html, function() {
+					afterBatch("lh-bind-content-" + cid, update);
+				}];
+			});
+			update();
+		});
+	});
+	Handlebars.registerHelper("content", function(options) {
+		contents[contentId] = options;
+	});
+
 
 	// HACK have to overwrite hookupModel because it doesn't support multiple hookups
 	Handlebars.registerHelper('hookupModel',function(ctx,options) {
@@ -456,7 +489,23 @@ steal("jquery","can/observe/compute","can","jquery/lang/string","mustache","jque
 		});
 	});
 
-	return {
+	Live = {
+		/**
+		 * Overwrite to batch updates (currently only supported by bindContent).
+		 * 
+		 * Batching updates can dramatically improve performance if you know that
+		 * the computed value will change several times before settling on the
+		 * final value.
+		 *
+		 * @param {String} uniqueId an id that uniquely identifies the update.
+		 * Subsequent calls with the same uniqueId should cancel any previous
+		 * update with the same uniqueId that have not yet run.
+		 *
+		 * @param {function} fn the function to run after the batch.
+		 */
+		afterBatch: function(uniqueId, update) {
+			update();
+		},
 		/**
 		 * Hook for building your own live bindings.
 		 * Usage:
@@ -477,4 +526,6 @@ steal("jquery","can/observe/compute","can","jquery/lang/string","mustache","jque
 		 */
 		addHookup: addHookup
 	};
+
+	return Live;
 });

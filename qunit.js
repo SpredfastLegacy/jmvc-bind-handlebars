@@ -7,9 +7,9 @@ steal("can",
 	"./test_views/bindSelect.mustache", "./test_views/bindText.mustache",
 	"./test_views/bindVal.mustache", "./test_views/hookupModel.mustache",
 	"./test_views/nestedBindIf.mustache",
+	"./test_views/bindContent.mustache", "underscore",
 	"jquery", "funcunit/qunit", "jquery/model", "jquery/model/list", "live_handlebars",
 	"can/observe/list",
-
 function(can,
 bindClass, bindHtml,
 bindIf, bindAttr,
@@ -19,6 +19,7 @@ bindObserveList, bindProp,
 bindSelect, bindText,
 bindVal, hookupModel,
 nestedBindIf,
+bindContent, _,
 $) {
 	"use strict";
 	/*global module, test, equal, ok, expect */
@@ -505,6 +506,38 @@ $) {
 		});
 	});
 //*/
+
+	test("bindContent", function() {
+		var queued = {};
+		function afterBatch(uid, fn) {
+			queued[uid] = fn;
+		}
+		function endBatch() {
+			_.each(queued, function(fn) {
+				fn();
+			});
+			queued = {};
+		}
+		var instance = new can.Observe({
+			start: 1,
+			end: 10,
+			batch: afterBatch,
+			listOfStuff: function() {
+				return _.range(this.attr("start"), this.attr("end"));
+			}
+		});
+		render(bindContent, instance, function(el) {
+			equal(el.text().replace(/\s+/g," ").trim(), _.range(1,10).join(" "));
+
+			instance.attr("start", 5);
+			equal(el.text().replace(/\s+/g," ").trim(), _.range(1,10).join(" "),
+				"batch prevents update during batch");
+			instance.attr("end", 50);
+			endBatch();
+
+			equal(el.text().replace(/\s+/g," ").trim(), _.range(5,50).join(" "));
+		});
+	});
 
 	test("derrived attributes", function() {});
 
