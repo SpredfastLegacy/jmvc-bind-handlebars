@@ -1,9 +1,7 @@
 <ul {{bindContent batch=batch}}>
 	{{#content}}
 		{{#listOfStuff}}{{! have to call the function to get the array for each}}
-			{{#each this}}
-				<li>{{this}}
-			{{/each}}
+			<li>{{this}}
 		{{/listOfStuff}}
 	{{/content}}
 </ul>	
