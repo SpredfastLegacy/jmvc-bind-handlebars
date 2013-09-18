@@ -1,7 +1,5 @@
-/**
- * (c) 2012 Spredfast, Inc. BSD Licensed; see LICENSE.txt
- */
-steal("jquery","can/observe/compute","can","jquery/lang/string","mustache","jquery/view",function($,compute,can) {
+define(["jquery/jquery","can/observe/compute/compute","can/can","jquery/lang/string/string","mustache/mustache","jquery/view/view"],
+function($,compute,can) {
 	"use strict";
 	/*global Handlebars */
 	var toString = Object.prototype.toString;
