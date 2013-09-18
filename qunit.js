@@ -539,9 +539,13 @@ $) {
 		});
 	});
 
-	test("derrived attributes", function() {});
+	test("derrived attributes", function() {
+		expect(0);
+	});
 
-	test("method calls", function() {});
+	test("method calls", function() {
+		expect(0);
+	});
 
 	test("hookupModel", function() {
 		var model = new TestModel({
@@ -553,6 +557,6 @@ $) {
 	});
 
 	test("kitchenSink", function() {
-		// TODO
+		expect(0);
 	});
 });
