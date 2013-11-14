@@ -216,11 +216,20 @@ function($,compute,can) {
 					newContent = $('<span></span>');
 				}
 
-				// XXX we're disconnected here too, so have to implement our own replaceWith.
 				var contentNode = content[0];
-				newContent.each(function() {
-					contentNode.parentNode.insertBefore( this, contentNode );
-				});
+				// jquery will not insert "before" on a document fragment
+				// however, since we are inserting into a document fragment, any
+				// jquery modifier wrappers will get another chance when the
+				// fragment is inserted into the document
+				if (contentNode.parentNode.nodeType === 11) {
+					newContent.each(function() {
+						contentNode.parentNode.insertBefore( this, contentNode );
+					});
+				} else {
+					// if we are in a live element, then we *must* use before so that
+					// the new content is hooked up (it wont have another chance)
+					content.before(newContent);
+				}
 				content.remove();
 				content = newContent;
 			})(placeholderEl);
