@@ -186,6 +186,8 @@ function($,compute,can) {
 		});
 	});
 
+	var FRAGMENT_NODE_TYPE = 11;
+
 	Handlebars.registerHelper('bindIf',function(attr,options) {
 		var ctx = options.hash.context || this,
 			templateContext = this,
@@ -218,7 +220,7 @@ function($,compute,can) {
 				// jquery modifier wrappers will get another chance when the
 				// fragment is inserted into the document
 				var insert = placeholderEl[0];
-				if (insert.parentNode.nodeType === 11) {
+				if (insert.parentNode.nodeType === FRAGMENT_NODE_TYPE) {
 					content.each(function() {
 						insert.parentNode.insertBefore(this, insert);
 					});
