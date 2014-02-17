@@ -1,0 +1,12 @@
+<div class="tab-content-container">				
+	{{#bindIf loading}}
+		<div class="copied"></div>
+	{{else}}
+		{{! key to this test is the multiple elements. More than 1 causes copied to be copied,
+			because it is inserted before both. }}
+		<div class="groupHeader">
+		</div>
+		<div class="groupHeader">
+		</div>
+	{{/bindIf}}
+</div>

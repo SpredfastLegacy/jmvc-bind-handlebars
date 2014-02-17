@@ -208,30 +208,25 @@ function($,compute,can) {
 				}
 				oldValue = condition;
 
-				var newContent = $('<div/>').
+				content.remove();
+				content = $('<div/>').
 					html( (condition ? options.fn : options.inverse)(templateContext) ).
 					children();
 
-				if(!newContent.length) {
-					newContent = $('<span></span>');
-				}
-
-				var contentNode = content[0];
 				// jquery will not insert "before" on a document fragment
 				// however, since we are inserting into a document fragment, any
 				// jquery modifier wrappers will get another chance when the
 				// fragment is inserted into the document
-				if (contentNode.parentNode.nodeType === 11) {
-					newContent.each(function() {
-						contentNode.parentNode.insertBefore( this, contentNode );
+				var insert = placeholderEl[0];
+				if (insert.parentNode.nodeType === 11) {
+					content.each(function() {
+						insert.parentNode.insertBefore(this, insert);
 					});
 				} else {
 					// if we are in a live element, then we *must* use before so that
 					// the new content is hooked up (it wont have another chance)
-					content.before(newContent);
+					placeholderEl.before(content);
 				}
-				content.remove();
-				content = newContent;
 			})(placeholderEl);
 		}) +'></span>';
 	});

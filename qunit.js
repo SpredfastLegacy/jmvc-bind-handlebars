@@ -1,6 +1,7 @@
 define(["can/can",
 	"r/mustache!live_handlebars/test_views/bindClass.mustache", "r/mustache!live_handlebars/test_views/bindHtml.mustache",
 	"r/mustache!live_handlebars/test_views/bindIf.mustache", "r/mustache!live_handlebars/test_views/bindAttr.mustache",
+	"r/mustache!live_handlebars/test_views/bindIfElse.mustache",
 	"r/mustache!live_handlebars/test_views/bindList.mustache", "r/mustache!live_handlebars/test_views/bindListAndIf.mustache",
 	"r/mustache!live_handlebars/test_views/bindListComputed.mustache", "r/mustache!live_handlebars/test_views/bindListUnsorted.mustache",
 	"r/mustache!live_handlebars/test_views/bindObserveList.mustache", "r/mustache!live_handlebars/test_views/bindProp.mustache",
@@ -13,6 +14,7 @@ define(["can/can",
 function(can,
 bindClass, bindHtml,
 bindIf, bindAttr,
+bindIfElse,
 bindList, bindListAndIf,
 bindListComputed, bindListUnsorted,
 bindObserveList, bindProp,
@@ -110,6 +112,25 @@ $) {
 			model.attr('foo.boolean', true);
 
 			equal(parent.find('p').text(), 'Foo: 123');
+		});
+	});
+	test("bindIfElse", function() {
+		var loading = can.compute(false);
+		var model = {
+			loading: loading
+		};
+		render(bindIfElse, model, function(parent) {
+			equal(parent.find('.copied').length, 0,
+				"not loading");
+
+			loading(true);
+			equal(parent.find('.copied').length, 1,
+				"loading");
+
+			loading(false);
+			equal(parent.find('.copied').length, 0,
+				"not loading");
+
 		});
 	});
 	test("bindList", function() {
