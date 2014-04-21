@@ -180,12 +180,6 @@ function($,compute,can) {
 		});
 	});
 
-	Handlebars.registerHelper('bindHtml',function(attr,options) {
-		return bindOne.call(this,attr,options,function(el,html) {
-			el.html(""+html);
-		});
-	});
-
 	var FRAGMENT_NODE_TYPE = 11;
 
 	Handlebars.registerHelper('bindIf',function(attr,options) {
