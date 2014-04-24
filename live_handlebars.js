@@ -232,6 +232,7 @@ function($,compute,can) {
 	// data key for the custom item id
 	var ITEM_BINDING = 'live-handlebars-list-item-id';
 	Handlebars.registerHelper('bindList',function(ctx,options) {
+		console.log("bindList is deprecated. use bindFilterable");
 		if(!ctx.bind) {
 			options = ctx;
 			ctx = this;

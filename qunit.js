@@ -1,5 +1,5 @@
 define(["can/can",
-	"r/mustache!live_handlebars/test_views/bindClass.mustache", "r/mustache!live_handlebars/test_views/bindHtml.mustache",
+	"r/mustache!live_handlebars/test_views/bindClass.mustache",
 	"r/mustache!live_handlebars/test_views/bindIf.mustache", "r/mustache!live_handlebars/test_views/bindAttr.mustache",
 	"r/mustache!live_handlebars/test_views/bindIfElse.mustache",
 	"r/mustache!live_handlebars/test_views/bindList.mustache", "r/mustache!live_handlebars/test_views/bindListAndIf.mustache",
@@ -12,7 +12,7 @@ define(["can/can",
 	"jquery/jquery", "funcunit/qunit/qunit", "jquery/model/model", "jquery/model/list/list", "live_handlebars/live_handlebars",
 	"can/observe/list/list"],
 function(can,
-bindClass, bindHtml,
+bindClass,
 bindIf, bindAttr,
 bindIfElse,
 bindList, bindListAndIf,
@@ -85,19 +85,7 @@ $) {
 
 		});
 	});
-	test("bindHtml", function() {
-		var model = new can.Observe({
-			foo: '<em>Hello</em> World!'
-		});
-		render(bindHtml, model, function(el) {
-			el = el.find('p');
-			equal(el.html().toLowerCase(), '<em>Hello</em> World!'.toLowerCase());
 
-			model.attr('foo', 'Hi Bob.');
-
-			equal(el.html(), 'Hi Bob.');
-		});
-	});
 	test("bindIf", function() {
 		var model = new($.Model)({
 			foo: {
